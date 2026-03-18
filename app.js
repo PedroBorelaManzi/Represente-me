@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // ESTADO E VARIÁVEIS GLOBAIS
 // ==========================================
 let empresas = [];
@@ -351,21 +351,13 @@ function getUserPrefix() {
     return localStorage.getItem('nexus_user') || 'default';
 }
 
-function carregarDados() {
+async function carregarDados() {
     const prefix = getUserPrefix();
-    const dadosSalvos = localStorage.getItem('nexus_empresas_' + prefix);
-    if (dadosSalvos) {
-        empresas = JSON.parse(dadosSalvos);
-    } else {
-        // Fallback p/ n perder dados no sistema anterior sem user logado
-        const oldData = localStorage.getItem('nexus_empresas');
-        if (oldData) {
-            empresas = JSON.parse(oldData);
-            // Salva no novo pra migrar
-            localStorage.setItem('nexus_empresas_' + prefix, oldData);
-            localStorage.removeItem('nexus_empresas'); // Migration completa
-        }
-    }
+    const { data, error } = await supabaseClient.from('empresas').select('*').eq('user_email', prefix);
+    
+    if (error) { console.error("Erro ao carregar:", error); return; }
+    if (data) empresas = data;
+
     renderizarViews();
     atualizarDashboard();
     renderizarSidebarLogos();
@@ -373,8 +365,7 @@ function carregarDados() {
 }
 
 function salvarDados() {
-    const prefix = getUserPrefix();
-    localStorage.setItem('nexus_empresas_' + prefix, JSON.stringify(empresas));
+    // Agora o salvamento Ã© feito diretamente no Supabase pelas funÃ§Ãµes de CRUD.
     atualizarDashboard();
     renderizarSidebarLogos();
     renderizarPinosTopbar();
@@ -394,56 +385,50 @@ window.abrirIframeFullScreen = abrirIframeFullScreen;
 window.prepararEdicao = prepararEdicao;
 window.deletarEmpresa = deletarEmpresa;
 
-function salvarEmpresa(e) {
+async function salvarEmpresa(e) {
     e.preventDefault();
 
     const nomeEmpresa = document.getElementById('nomeEmpresa').value.trim();
-    const cnpjEmpresa = document.getElementById('cnpjEmpresa') ? document.getElementById('cnpjEmpresa').value.trim() : "";
+    const cnpjEmpresa = document.getElementById('cnpjEmpresa') ? document.getElementById('cnpjEmpresa').value.trim() : """";
     const nomeContato = document.getElementById('nomeContato').value.trim();
     const telefone = document.getElementById('telefone').value.trim();
     const tipoItem = document.getElementById('tipoItem').value;
     const status = document.getElementById('status').value;
     const siteUrl = document.getElementById('siteUrl').value.trim();
 
-    const loginCofre = document.getElementById('loginCofre') ? document.getElementById('loginCofre').value.trim() : "";
-    const senhaCofre = document.getElementById('senhaCofre') ? document.getElementById('senhaCofre').value.trim() : "";
+    const loginCofre = document.getElementById('loginCofre') ? document.getElementById('loginCofre').value.trim() : """";
+    const senhaCofre = document.getElementById('senhaCofre') ? document.getElementById('senhaCofre').value.trim() : """";
 
-    if (!nomeEmpresa || !tipoItem) {
-        mostrarToast("Preencha o Nome e o Tipo para continuar!", "error");
-        return;
-    }
+    if (!nomeEmpresa || !tipoItem) { mostrarToast(""Preencha o Nome e o Tipo!"", ""error""); return; }
 
     const editandoTarget = empresas.find(emp => emp.id === editandoId);
 
     const novaEmpresa = {
-        id: editandoId || Date.now().toString(),
         nome: nomeEmpresa,
-        cnpj: cnpjEmpresa || "-",
-        contato: nomeContato || "-",
-        telefone: telefone || "-",
+        cnpj: cnpjEmpresa || ""-"",
+        contato: nomeContato || ""-"",
+        telefone: telefone || ""-"",
         tipo: tipoItem,
         origem: tipoItem,
         status: status,
         siteUrl: siteUrl,
         loginCofre: loginCofre,
         senhaCofre: senhaCofre,
-        notas: editandoTarget ? editandoTarget.notas : "",
-        arquivos: editandoTarget && editandoTarget.arquivos ? editandoTarget.arquivos : [],
-        isPinned: editandoTarget ? editandoTarget.isPinned : false,
-        dataCadastro: editandoTarget ? editandoTarget.dataCadastro : new Date().toISOString()
+        notas: editandoTarget ? editandoTarget.notas : """",
+        isPinned: editandoTarget ? editandoTarget.isPinned : false
     };
 
     if (editandoId) {
-        const index = empresas.findIndex(emp => emp.id === editandoId);
-        empresas[index] = novaEmpresa;
-        mostrarToast("Cadastro atualizado com sucesso!");
+        const { error } = await supabaseClient.from('empresas').update(novaEmpresa).eq('id', editandoId);
+        if (error) { mostrarToast(""Erro ao atualizar"", ""error""); return; }
+        mostrarToast(""Atualizado com sucesso!"");
     } else {
-        empresas.unshift(novaEmpresa);
-        mostrarToast("Cadastrado com sucesso!");
+        const { error } = await supabaseClient.from('empresas').insert([{ ...novaEmpresa, user_email: getUserPrefix() }]);
+        if (error) { mostrarToast(""Erro ao cadastrar"", ""error""); return; }
+        mostrarToast(""Cadastrado com sucesso!"");
     }
 
-    salvarDados();
-    renderizarViews();
+    carregarDados();
     fecharModal();
 }
 
