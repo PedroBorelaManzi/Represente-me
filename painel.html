@@ -244,13 +244,12 @@
             <!-- ==== COLUNA DO MAPA BRASIL ==== -->
             <div class="map-column full-view" id="mapColumn" style="display:none; height: calc(100vh - 80px); padding: 10px;">
                 <div style="background: white; border-radius: 12px; height: 100%; box-shadow: var(--shadow); position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: 15px; left: 60px; z-index: 1000; display: flex; align-items: center; gap: 10px;">
-                        <div style="display:flex; align-items:center; background:rgba(20,20,20,0.85); backdrop-filter: blur(10px); padding:4px 15px; height: 38px; border:1px solid rgba(255,255,255,0.1); border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <input type="text" id="pesquisaMapaInput" placeholder="Buscar no mapa (Cidade, Nome)..." onkeyup="if(event.key === 'Enter' || event.keyCode === 13) { if(typeof filtrarPinosMapa === 'function') filtrarPinosMapa() }" style="border:none; background:transparent; font-size:13px; outline:none; width:220px; color: white;">
-                            <i class='bx bx-search' style="color:#bbb; cursor:pointer; font-size: 16px; margin-left: 5px;" onclick="if(typeof filtrarPinosMapa === 'function') filtrarPinosMapa()"></i>
-                        </div>
-                        <button class="btn-primary" onclick="abrirModalNovoClienteMapa()" style="padding: 8px 15px; font-size: 13px; border-radius: 20px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                            <i class='bx bx-plus'></i> Cadastrar via CNPJ
+                    <!-- Layout Unificado da Barra de Pesquisa -->
+                    <div style="position: absolute; top: 15px; left: 60px; z-index: 1000; display: flex; align-items: center; background: white; padding: 4px 4px 4px 15px; height: 44px; border-radius: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #efefef;">
+                        <i class=`"bx bx-map-pin`" style=`"color: #FF6600; font-size: 16px; margin-right: 8px;`"></i>
+                        <input type=`"text`" id=`"pesquisaMapaInput`" placeholder=`"Buscar Cidade, Nome ou CNPJ...`" onkeyup=`"if(event.key === 'Enter' || event.keyCode === 13) { if(typeof filtrarPinosMapa === 'function') filtrarPinosMapa() }`" style=`"border: none; background: transparent; font-size: 13px; outline: none; width: 330px; color: #333;`">
+                        <button onclick=`"abrirModalNovoClienteMapa()`" style=`"background: #FF6600; color: white; border: none; padding: 10px 18px; font-size: 13px; border-radius: 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; height: 100%;` white-space: nowrap;`">
+                            <i class=`"bx bx-plus`"></i> Cadastrar via CNPJ
                         </button>
                     </div>
                     <div id="map" style="width: 100%; height: 100%;"></div>

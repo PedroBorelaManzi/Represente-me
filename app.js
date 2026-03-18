@@ -1596,11 +1596,23 @@ window.filtrarPinosMapa = function() {
     // Let's implement full clear and re-render of matched 
     if (pinsLayer) pinsLayer.clearLayers();
     
-    const filtrados = locaisLojistas.filter(l => 
-        (l.nome && l.nome.toLowerCase().includes(termo)) || 
-        (l.obs && l.obs.toLowerCase().includes(termo)) ||
-        (l.cnpj && l.cnpj.includes(termo))
-    );
+    const filtrados = locaisLojistas.filter(l => {
+        const termClean = termo.replace(/[^0-9]/g, "");
+        const nomeMatch = l.nome && l.nome.toLowerCase().includes(termo);
+        const obsMatch = l.obs && l.obs.toLowerCase().includes(termo);
+        let cnpjMatch = false;
+        
+        if (l.cnpj) {
+            const cnpjClean = l.cnpj.replace(/[^0-9]/g, "");
+            cnpjMatch = termClean.length > 0 && cnpjClean.includes(termClean);
+        }
+        if (!cnpjMatch && l.obs && termClean.length > 0) {
+             const obsClean = l.obs.replace(/[^0-9]/g, "");
+             cnpjMatch = obsClean.includes(termClean);
+        }
+        
+        return nomeMatch || obsMatch || cnpjMatch;
+    });
     
     filtrados.forEach(local => {
         const marker = L.marker([local.lat, local.lng], { icon: obterIconePin(local.status) });
