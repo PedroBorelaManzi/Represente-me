@@ -19,7 +19,7 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAçãoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
@@ -262,7 +262,6 @@
                     <div style="padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); background: #fdfdfd; display:flex; align-items:center;">
                         <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #333;"><i class='bx bx-list-ul'></i> Meus Clientes</h4>
                     </div>
-                    <div style="padding: 10px; border-bottom: 1px solid #eee;">
                     <div style="padding: 10px; border-bottom: 1px solid #eee; display: flex; gap: 8px; align-items: center; background: #fff;">
                         <div style="display:flex; flex-direction:column;">
                             <span style="font-size: 10px; font-weight: 700; color: #777; margin-bottom: 2px;">ESCOLHA UM FILTRO</span>
@@ -553,7 +552,7 @@
     </script>
     <script>
         window.addEventListener('error', function (event) {
-            alert("JS Error: " + event.message + " at " + event.filename + ":" + event.lineno);
+            console.error("JS Error: " + event.message + " at " + event.filename + ":" + event.lineno);
         });
     </script>
     <script  src="app.js" defer></script>

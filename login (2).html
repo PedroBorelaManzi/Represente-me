@@ -34,9 +34,6 @@
             <!-- LADO ESQUERDO - Formulários -->
             <div class="login-left">
                 <div class="login-header">
-                    <div class="logo">
-                        <img src="logo.png" alt="Represente-me!" class="logo-full-img">
-                    </div>
                     <h2 id="formTitle">Bem-vindo de <span>volta!</span></h2>
                     <p id="formSubtitle">Acesse sua plataforma de soluções em vendas e gerencie tudo em um só lugar.</p>
                 </div>
@@ -176,8 +173,45 @@
                 setTimeout(function () { toast.remove(); }, 300);
             }, duracao);
         }
+
+        // Funções de fallback — evitam erro "is not defined" se login.js demorar a carregar
+        function loginComGoogle() {
+            mostrarToast('Funcionalidade em desenvolvimento.', 'info');
+        }
+        function simularOAuth(provider) {
+            mostrarToast('Login com ' + provider + ' em desenvolvimento.', 'info');
+        }
+        function togglePwd(id, el) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                el.classList.replace('bx-low-vision', 'bx-show');
+            } else {
+                input.type = 'password';
+                el.classList.replace('bx-show', 'bx-low-vision');
+            }
+        }
+        function switchForm(target) {
+            var loginForm = document.getElementById('loginForm');
+            var signupForm = document.getElementById('signupForm');
+            var title = document.getElementById('formTitle');
+            var subtitle = document.getElementById('formSubtitle');
+            if (target === 'signup') {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                title.innerHTML = 'Criar sua <span>conta!</span>';
+                subtitle.textContent = 'Preencha os dados abaixo para começar.';
+            } else {
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                title.innerHTML = 'Bem-vindo de <span>volta!</span>';
+                subtitle.textContent = 'Acesse sua plataforma de soluções em vendas e gerencie tudo em um só lugar.';
+            }
+        }
     </script>
-    <script type="module" src="login.js"></script>
+    <script  src="login.js"></script>
 </body>
 
 </html>
+

@@ -1,10 +1,5 @@
-﻿window.addEventListener('error', function (event) {
-    if (typeof mostrarToast === 'function') {
-        mostrarToast('Erro interno: ' + event.message, 'error');
-    }
-});
-// ==========================================
-// ESTADO E VARIÃVEIS GLOBAIS
+﻿// ==========================================
+// ESTADO E VARIÁVEIS GLOBAIS
 // ==========================================
 let empresas = [];
 let editandoId = null;
@@ -42,7 +37,7 @@ const linkPainel = document.getElementById("linkPainel");
 const btnToggleView = document.getElementById("btnToggleView");
 
 // ==========================================
-// INICIALIZAÃ‡ÃƒO E EVENTOS
+// INICIALIZAÇÃO E EVENTOS
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('nexus_auth') !== 'true') {
@@ -67,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('nexus_view_mode', currentViewMode);
             atualizarIconeToggle();
             renderizarViews();
-            mostrarToast(currentViewMode === 'table' ? "visão em Lista ativada." : "visão em Grid ativada.", "info");
+            mostrarToast(currentViewMode === 'table' ? "Visão em Lista ativada." : "Visão em Grid ativada.", "info");
         });
     }
 
@@ -79,17 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarDados();
 
     if (form) form.addEventListener('submit', salvarEmpresa);
-
-    const cnpjEmpresaField = document.getElementById('cnpjEmpresa');
-    if (cnpjEmpresaField) {
-        cnpjEmpresaField.addEventListener('blur', applyCNPJAutoFill);
-    }
-
-    // Auto fill para pinos de Lojistas no mapa
-    const pinCnpjField = document.getElementById('pinCnpj');
-    if (pinCnpjField) {
-        pinCnpjField.addEventListener('blur', applyMapCNPJAutoFill);
-    }
 
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.addEventListener('input', filtrarEmpresas);
@@ -151,104 +135,6 @@ function applyMagicAutoFill(e) {
     }
 }
 
-async function applyCNPJAutoFill(e) {
-    let rawValue = e.target.value.trim();
-    let cnpj = rawValue.replace(/\D/g, '');
-    if (cnpj.length !== 14) return;
-
-    mostrarToast("Buscando dados da Receita e IBGE...", "info");
-
-    try {
-        let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-        if (!response.ok) throw new Error("CNPJ não encontrado na base");
-        let data = await response.json();
-
-        let nomeField = document.getElementById('nomeEmpresa');
-        if (!nomeField.value) nomeField.value = data.nome_fantasia || data.razao_social;
-
-        let telefoneField = document.getElementById('telefone');
-        if (!telefoneField.value && data.ddd_telefone_1) {
-            telefoneField.value = data.ddd_telefone_1;
-        }
-
-        let tipoField = document.getElementById('tipoItem');
-        if (!tipoField.value) tipoField.value = 'empresa';
-
-        let localidadeInfo = "";
-        let endereco = "";
-        if (data.logradouro) {
-            endereco = `${data.logradouro}, ${data.numero}, ${data.municipio}, ${data.uf}`;
-            localidadeInfo = endereco;
-        } else {
-            endereco = `${data.municipio}, ${data.uf}`;
-            localidadeInfo = endereco;
-        }
-
-        if (endereco) {
-            let geocodeResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`);
-            let geoData = await geocodeResp.json();
-
-            if (geoData && geoData.length > 0) {
-                e.target.dataset.lat = geoData[0].lat;
-                e.target.dataset.lng = geoData[0].lon;
-                e.target.dataset.endereco = localidadeInfo;
-            }
-        }
-
-        mostrarToast("Cadastro Empresarial e Localização puxados via API!", "success");
-    } catch (err) {
-        mostrarToast(err.message, "error");
-    }
-}
-
-async function applyMapCNPJAutoFill(e) {
-    let rawValue = e.target.value.trim();
-    let cnpj = rawValue.replace(/\D/g, '');
-    if (cnpj.length !== 14) return;
-
-    mostrarToast("Buscando dados no Mapa...", "info");
-
-    try {
-        let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-        if (!response.ok) throw new Error("CNPJ não encontrado");
-        let data = await response.json();
-
-        let nomeField = document.getElementById('pinNome');
-        if (!nomeField.value) nomeField.value = data.nome_fantasia || data.razao_social;
-
-        let telefoneField = document.getElementById('pinContato');
-        if (!telefoneField.value && data.ddd_telefone_1) {
-            telefoneField.value = data.ddd_telefone_1;
-        }
-
-        let addressField = document.getElementById('pinObs');
-        let endereco = "";
-
-        if (data.logradouro) {
-            endereco = `${data.logradouro}, ${data.numero}, ${data.municipio}, ${data.uf}`;
-        } else {
-            endereco = `${data.municipio}, ${data.uf}`;
-        }
-
-        if (!addressField.value) addressField.value = "Endereço: " + endereco;
-
-        if (endereco) {
-            let geocodeResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`);
-            let geoData = await geocodeResp.json();
-
-            if (geoData && geoData.length > 0) {
-                document.getElementById("pinLat").value = geoData[0].lat;
-                document.getElementById("pinLng").value = geoData[0].lon;
-                mostrarToast("Localização encontrada com sucesso!", "success");
-            } else {
-                mostrarToast("Preenchido! Mas Endereço não mapeável via Satélite. Clique no mapa manualmente.", "error");
-            }
-        }
-    } catch (err) {
-        mostrarToast(err.message, "error");
-    }
-}
-
 function getClearbitLogoUrl(url, nome) {
     let domain = "";
     if (url && url !== "-") {
@@ -302,7 +188,7 @@ window.handleImageError = function (img, fallbackUrl, avatarUrl) {
 };
 
 // ==========================================
-// NAVEGAÃ‡ÃƒO / VIEWS (PAINEL vs IFRAME)
+// NAVEGAÇÃO / VIEWS (PAINEL vs IFRAME)
 // ==========================================
 function mostrarPainel() {
     mainColumn.style.display = 'block';
@@ -370,17 +256,6 @@ function abrirIframeFullScreen(url, nomeEmpresa, empresaId) {
     sistemaIframe.src = url;
 
     document.querySelectorAll(".nav-links a").forEach(l => l.classList.remove("active"));
-}
-
-function toggleNotesPanel() {
-    const panel = document.getElementById('iframeNotesPanel');
-    if (panel) {
-        if (panel.style.width === '0px' || panel.style.width === '0') {
-            panel.style.width = '250px';
-        } else {
-            panel.style.width = '0px';
-        }
-    }
 }
 
 function toggleSubMenuEmpresas() {
@@ -470,7 +345,7 @@ function renderizarPinosTopbar() {
 }
 
 // ==========================================
-// FUNÃ‡Ã•ES DE CRUD E LOCAL STORAGE
+// FUNÇÕES DE CRUD E LOCAL STORAGE
 // ==========================================
 function getUserPrefix() {
     return localStorage.getItem('nexus_user') || 'default';
@@ -530,6 +405,8 @@ function salvarEmpresa(e) {
     const status = document.getElementById('status').value;
     const siteUrl = document.getElementById('siteUrl').value.trim();
 
+    const loginCofre = document.getElementById('loginCofre') ? document.getElementById('loginCofre').value.trim() : "";
+    const senhaCofre = document.getElementById('senhaCofre') ? document.getElementById('senhaCofre').value.trim() : "";
 
     if (!nomeEmpresa || !tipoItem) {
         mostrarToast("Preencha o Nome e o Tipo para continuar!", "error");
@@ -548,34 +425,13 @@ function salvarEmpresa(e) {
         origem: tipoItem,
         status: status,
         siteUrl: siteUrl,
+        loginCofre: loginCofre,
+        senhaCofre: senhaCofre,
         notas: editandoTarget ? editandoTarget.notas : "",
         arquivos: editandoTarget && editandoTarget.arquivos ? editandoTarget.arquivos : [],
         isPinned: editandoTarget ? editandoTarget.isPinned : false,
         dataCadastro: editandoTarget ? editandoTarget.dataCadastro : new Date().toISOString()
     };
-
-    let cnpjField = document.getElementById('cnpjEmpresa');
-    if (cnpjField && cnpjField.dataset.lat && cnpjField.dataset.lng && !editandoId) {
-        const novoPin = {
-            id: novaEmpresa.id,
-            nome: novaEmpresa.nome,
-            contato: novaEmpresa.telefone !== "-" ? novaEmpresa.telefone : "",
-            status: 'ativo',
-            obs: "Adicionado Automaticamente.\nEndereço: " + cnpjField.dataset.endereco,
-            lat: parseFloat(cnpjField.dataset.lat),
-            lng: parseFloat(cnpjField.dataset.lng),
-            data: new Date().toISOString()
-        };
-
-        if (typeof locaisLojistas !== 'undefined' && typeof salvarPinosLocais === 'function') {
-            locaisLojistas.push(novoPin);
-            salvarPinosLocais();
-        }
-
-        delete cnpjField.dataset.lat;
-        delete cnpjField.dataset.lng;
-        delete cnpjField.dataset.endereco;
-    }
 
     if (editandoId) {
         const index = empresas.findIndex(emp => emp.id === editandoId);
@@ -592,12 +448,12 @@ function salvarEmpresa(e) {
 }
 
 function deletarEmpresa(id) {
-    if (confirm("Tem certeza que deseja excluir este registro? Esta Ação nÃ£o pode ser desfeita.")) {
+    if (confirm("Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.")) {
         empresas = empresas.filter(emp => emp.id !== id);
         salvarDados();
         renderizarViews();
         mostrarPainel();
-        mostrarToast("Registro Excluído com sucesso!", "success");
+        mostrarToast("Registro excluído com sucesso!", "success");
     }
 }
 
@@ -618,6 +474,8 @@ function prepararEdicao(id) {
         document.getElementById('tipoItem').value = dropDownTipo;
         document.getElementById('status').value = empresa.status;
         document.getElementById('siteUrl').value = empresa.siteUrl || '';
+        if (document.getElementById('loginCofre')) document.getElementById('loginCofre').value = empresa.loginCofre || '';
+        if (document.getElementById('senhaCofre')) document.getElementById('senhaCofre').value = empresa.senhaCofre || '';
 
         document.getElementById('btnSalvar').innerText = "Atualizar Cadastro";
 
@@ -626,7 +484,7 @@ function prepararEdicao(id) {
 }
 
 // ==========================================
-// FUNÃ‡Ã•ES DE UI E RENDERIZAÃ‡ÃƒO
+// FUNÇÕES DE UI E RENDERIZAÇÃO
 // ==========================================
 function abrirModal() {
     editandoId = null;
@@ -661,7 +519,7 @@ function formatarStatus(status) {
     const mapa = {
         'novo': 'NOVO',
         'ativo': 'ATIVO',
-        'manutencao': 'MANUTENÃ‡ÃƒO',
+        'manutencao': 'MANUTENÇÃO',
         'arquivado': 'INATIVO',
         'em_contato': 'CONTATO',
         'ganho': 'ATIVO',
@@ -760,7 +618,19 @@ function renderizarViews(dados = null) {
                 btnAbrir.innerHTML = "<i class='bx bx-window-alt' style='vertical-align: middle;'></i> Abrir";
                 btnAbrir.onclick = () => window.abrirIframeFullScreen(urlValue, emp.nome, emp.id);
 
+                const btnCofre = document.createElement('button');
+                btnCofre.className = "action-btn cofre-btn";
+                btnCofre.title = "Ver Credenciais de Acesso";
+                btnCofre.style.cssText = "color: #333; font-size: 14px; background: #e2e8f0; padding: 5px 10px; border-radius: 6px; margin-left:5px;";
+                btnCofre.innerHTML = "<i class='bx bx-lock-alt' style='vertical-align: middle;'></i>";
+                btnCofre.onclick = () => {
+                    const l = emp.loginCofre || "Não cadastrado";
+                    const s = emp.senhaCofre || "Não cadastrada";
+                    alert(`🔐 CRENDENCIAIS DO COFRE\n\nLogin: ${l}\nSenha: ${s}`);
+                };
 
+                tdActionOpen.appendChild(btnAbrir);
+                tdActionOpen.appendChild(btnCofre);
 
                 const tdActionEdit = document.createElement('td');
 
@@ -841,6 +711,16 @@ function renderizarViews(dados = null) {
                 btnPin.onclick = (e) => { e.stopPropagation(); window.togglePin(emp.id); };
                 btnPin.innerHTML = "<i class='bx " + (emp.isPinned ? "bxs-star" : "bx-star") + "'></i>";
 
+                const btnCofre = document.createElement('button');
+                btnCofre.className = "action-btn";
+                btnCofre.title = "Acessos do Cofre";
+                btnCofre.onclick = (e) => {
+                    e.stopPropagation();
+                    const l = emp.loginCofre || "N/A";
+                    const s = emp.senhaCofre || "N/A";
+                    alert(`🔐 COFRE\nLogin: ${l}\nSenha: ${s}`);
+                };
+                btnCofre.innerHTML = "<i class='bx bx-lock-alt' style='color: #888;'></i>";
 
                 const btnDocs = document.createElement('button');
                 btnDocs.className = "action-btn";
@@ -861,6 +741,7 @@ function renderizarViews(dados = null) {
                 btnDelete.innerHTML = "<i class='bx bx-trash'></i>";
 
                 actionsDiv.appendChild(btnPin);
+                actionsDiv.appendChild(btnCofre);
                 actionsDiv.appendChild(btnDocs);
                 actionsDiv.appendChild(btnEdit);
                 actionsDiv.appendChild(btnDelete);
@@ -882,20 +763,16 @@ function renderizarTabela() {
 }
 
 function atualizarDashboard() {
-    const elTotalEmpresas = document.getElementById('totalEmpresas');
-    if (elTotalEmpresas) elTotalEmpresas.innerText = empresas.length;
+    document.getElementById('totalEmpresas').innerText = empresas.length;
 
     const viaSistema = empresas.filter(emp => (emp.tipo === 'sistema' || emp.origem === 'sistema' || emp.origem === 'site')).length;
-    const elSistemas = document.getElementById('totalSistemas');
-    if (elSistemas) elSistemas.innerText = viaSistema;
+    document.getElementById('totalSistemas').innerText = viaSistema;
 
     const viaApp = empresas.filter(emp => (emp.tipo === 'app' || emp.origem === 'app')).length;
-    const elApps = document.getElementById('totalApps');
-    if (elApps) elApps.innerText = viaApp;
+    document.getElementById('totalApps').innerText = viaApp;
 
     const viaPlanilhas = empresas.filter(emp => (emp.tipo === 'planilha' || emp.origem === 'planilha')).length;
-    const elPlanilhas = document.getElementById('totalPlanilhas');
-    if (elPlanilhas) elPlanilhas.innerText = viaPlanilhas;
+    document.getElementById('totalPlanilhas').innerText = viaPlanilhas;
 }
 
 function filtrarEmpresas(e) {
@@ -917,7 +794,7 @@ function filtrarEmpresas(e) {
 }
 
 // ==========================================
-// SISTEMA DE NOTIFICAÃ‡Ã•ES (TOAST)
+// SISTEMA DE NOTIFICAÇÕES (TOAST)
 // ==========================================
 function mostrarToast(mensagem, tipo = 'success') {
     const toast = document.createElement('div');
@@ -942,7 +819,7 @@ function fazerLogout() {
 }
 
 // ==========================================
-// MÃ“DULO DE MAPA DO BRASIL (LEAFLET)
+// MÓDULO DE MAPA DO BRASIL (LEAFLET)
 // ==========================================
 let map;
 let pinsLayer;
@@ -955,7 +832,7 @@ const pinForm = document.getElementById("pinForm");
 document.addEventListener('DOMContentLoaded', () => {
     carregarPinos();
     if (pinForm) {
-        pinForm.addEventListener('submit', salvarLojistaLocal);
+        pinForm.addEventListener('submit', window.salvarLojistaLocal);
     }
 });
 
@@ -1005,12 +882,6 @@ function initMap() {
     renderizarPinosNoMapa();
 }
 
-function abrirModalNovoClienteMapa() {
-    abrirModalPin('', '');
-    mostrarToast("Digite o CNPJ para buscar os dados automaticamente!", "info");
-}
-window.abrirModalNovoClienteMapa = abrirModalNovoClienteMapa;
-
 function obterIconePin(status) {
     let color = status === 'ativo' ? '#2ecc71' : status === 'prospect' ? '#f39c12' : '#e74c3c';
     return L.divIcon({
@@ -1027,16 +898,13 @@ function renderizarPinosNoMapa() {
     locaisLojistas.forEach(local => {
         const marker = L.marker([local.lat, local.lng], { icon: obterIconePin(local.status) });
         marker.bindPopup(`
-            <div style="min-width: 180px; padding: 5px; font-family: 'Inter', sans-serif;">
+            <div style="min-width: 150px; padding: 5px; font-family: 'Inter', sans-serif;">
                 <h4 style="margin:0 0 5px 0; color:#333; font-size:14px;">${local.nome}</h4>
                 <p style="margin:0; font-size:12px; color:#666;"><strong>Situação:</strong> ${local.status.toUpperCase()}</p>
                 ${local.contato ? `<p style="margin:5px 0 0 0; font-size:12px; font-weight:bold; color:var(--primary-color);"><i class='bx bx-phone'></i> ${local.contato}</p>` : ''}
                 ${local.obs ? `<p style="margin:8px 0 0 0; font-size:11px; border-top:1px solid #eee; padding-top:5px; color:#555;">${local.obs}</p>` : ''}
-                <div style="margin-top: 10px; display:flex; flex-direction:column; gap:6px;">
-                    <button class="btn-primary" style="font-size:12px; padding:6px 8px; border-radius:4px; cursor:pointer; width: 100%; display:flex; align-items:center; justify-content:center; gap:5px;" onclick="abrirPerfilCliente('${local.id}', 'lojista'); return false;">
-                        <i class='bx bx-folder-open'></i> Abrir Arquivos
-                    </button>
-                    <button class="btn-secondary" style="font-size:11px; padding:4px 8px; border-radius:4px; cursor:pointer; width: 100%; text-align:center;" onclick="prepararEdicaoPin('${local.id}'); return false;">
+                <div style="margin-top: 10px; text-align: right;">
+                    <button class="btn-secondary" style="font-size:11px; padding:3px 8px; border-radius:4px; cursor:pointer;" onclick="prepararEdicaoPin('${local.id}'); return false;">
                         Editar / Excluir
                     </button>
                 </div>
@@ -1084,19 +952,13 @@ function salvarLojistaLocal(e) {
 
     const latStr = document.getElementById("pinLat").value;
     const lngStr = document.getElementById("pinLng").value;
-    const pinCnpj = document.getElementById("pinCnpj") ? document.getElementById("pinCnpj").value : "";
-
-    if (!latStr || !lngStr) {
-        mostrarToast("Endereço não localizado pelo CNPJ e nenhum ponto no mapa foi clicado!", "error");
-        return;
-    }
 
     const novoPin = {
         id: editandoPinId || Date.now().toString(),
         nome: nome,
         contato: document.getElementById("pinContato").value.trim(),
         status: document.getElementById("pinStatus").value,
-        obs: document.getElementById("pinObs").value.trim() + (pinCnpj ? "\nCNPJ: " + pinCnpj : ""),
+        obs: document.getElementById("pinObs").value.trim(),
         lat: parseFloat(latStr),
         lng: parseFloat(lngStr),
         data: new Date().toISOString()
@@ -1154,10 +1016,200 @@ window.prepararEdicaoPin = prepararEdicaoPin;
 window.deletarPinSelecionado = deletarPinSelecionado;
 
 // ==========================================
-// MÃ“DULO DE PERFIL / ARQUIVOS
-// ==========================================
 // MÓDULO DE PERFIL / ARQUIVOS
+// ==========================================
 
+
+function abrirPerfilCliente(id) {
+    const emp = empresas.find(e => e.id === id);
+    if (!emp) return;
+
+    clientePerfilId = id;
+
+    const perfilModal = document.getElementById("perfilModal");
+    if (!perfilModal) return;
+
+    document.getElementById("perfilNome").innerText = emp.nome;
+    document.getElementById("perfilCNPJ").innerText = emp.cnpj && emp.cnpj !== "-" ? "CNPJ: " + emp.cnpj : "Sistema / Site / Prospect";
+
+    if (!emp.arquivos) emp.arquivos = [];
+
+    renderizarArquivosCliente();
+    perfilModal.classList.add("active");
+}
+
+function fecharPerfil() {
+    const perfilModal = document.getElementById("perfilModal");
+    if (perfilModal) perfilModal.classList.remove("active");
+    clientePerfilId = null;
+    document.getElementById('fileUploadInput').value = '';
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!clientePerfilId) return;
+
+    // Limite de memoria local (1.5MB) pre-evita o QuotaExceededError
+    if (file.size > 1.5 * 1024 * 1024) {
+        mostrarToast("Selecione um arquivo de até 1.5MB.", "error");
+        document.getElementById('fileUploadInput').value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const base64Data = e.target.result;
+
+        const emp = empresas.find(e => e.id === clientePerfilId);
+        if (!emp.arquivos) emp.arquivos = [];
+
+        const isPdf = file.name.toLowerCase().endsWith('.pdf');
+        const isImage = file.type.startsWith('image');
+        const icon = isPdf ? 'bx-file-pdf' : (isImage ? 'bx-image' : 'bx-file-blank');
+
+        emp.arquivos.push({
+            id: Date.now().toString(),
+            name: file.name,
+            size: (file.size / 1024).toFixed(1) + ' KB',
+            type: file.type,
+            icon: icon,
+            dataUrl: base64Data,
+            date: new Date().toLocaleDateString('pt-BR')
+        });
+
+        try {
+            salvarDados();
+            renderizarArquivosCliente();
+            mostrarToast("Upload concluido!", "success");
+        } catch (error) {
+            mostrarToast("Memória cheia! Exclua outros arquivos.", "error");
+            emp.arquivos.pop();
+        }
+    };
+    reader.onerror = function () {
+        mostrarToast("Erro na leitura do arquivo.", "error");
+    };
+    reader.readAsDataURL(file);
+}
+
+function renderizarArquivosCliente() {
+    const container = document.getElementById("listaArquivosContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const emp = empresas.find(e => e.id === clientePerfilId);
+    if (!emp || !emp.arquivos || emp.arquivos.length === 0) {
+        container.innerHTML = "<p style='color:#999; font-size:13px; text-align:center; padding:10px;'>Nenhum arquivo adicionado.</p>";
+        return;
+    }
+
+    emp.arquivos.forEach(arq => {
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+        div.style.padding = "10px";
+        div.style.border = "1px solid #ddd";
+        div.style.borderRadius = "8px";
+        div.style.marginBottom = "8px";
+        div.style.backgroundColor = "#fff";
+
+        const typeColor = arq.icon === 'bx-file-pdf' ? '#e74c3c' : (arq.icon === 'bx-image' ? '#3498db' : '#95a5a6');
+
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; width:75%;">
+                <i class='bx ${arq.icon}' style='font-size:24px; color:${typeColor}'></i>
+                <div style="max-width:90%">
+                    <h5 style="margin:0; font-size:13px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${arq.name}</h5>
+                    <p style="margin:0; font-size:11px; color:#888;">${arq.size} - ${arq.date}</p>
+                </div>
+            </div>
+            <div style="display:flex; gap: 8px;">
+                <button title="Baixar / Visualizar" class="action-btn" onclick="visualizarArquivo('${arq.id}')" style="color:var(--primary-color)"><i class='bx bx-cloud-download'></i></button>
+                <button title="Excluir Arquivo" class="action-btn delete" onclick="deletarArquivo('${arq.id}')"><i class='bx bx-trash'></i></button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function visualizarArquivo(idArq) {
+    const emp = empresas.find(e => e.id === clientePerfilId);
+    if (!emp || !emp.arquivos) return;
+    const arq = emp.arquivos.find(a => a.id === idArq);
+    if (!arq) return;
+
+    // Converter de volta em Blob para forçar o Download em vez de travar o popup do chrome
+    fetch(arq.dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = arq.name;
+            link.click();
+            window.URL.revokeObjectURL(link.href);
+            mostrarToast("Iniciando visualização/download...", "info");
+        });
+}
+
+function deletarArquivo(idArq) {
+    if (!confirm("Certeza que quer apagar definitivamente este arquivo?")) return;
+
+    const emp = empresas.find(e => e.id === clientePerfilId);
+    if (!emp || !emp.arquivos) return;
+
+    emp.arquivos = emp.arquivos.filter(a => a.id !== idArq);
+    salvarDados();
+    renderizarArquivosCliente();
+    mostrarToast("Arquivo excluído.", "success");
+}
+
+window.abrirPerfilCliente = abrirPerfilCliente;
+window.fecharPerfil = fecharPerfil;
+window.handleFileUpload = handleFileUpload;
+window.visualizarArquivo = visualizarArquivo;
+window.deletarArquivo = deletarArquivo;
+// ==========================================
+// MÓDULO DE CONFIGURAÇÕES / TEMA
+// ==========================================
+function abrirConfiguracoes() {
+    const docModal = document.getElementById('configModal');
+    if(docModal) docModal.classList.add('active');
+    const currentTheme = localStorage.getItem('nexus_theme') || 'light';
+    const select = document.getElementById('themeSelect');
+    if(select) select.value = currentTheme;
+}
+
+function fecharConfiguracoes() {
+    const docModal = document.getElementById('configModal');
+    if(docModal) docModal.classList.remove('active');
+}
+
+function aplicarTema(theme) {
+    if(theme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+}
+
+function mudarTema() {
+    const select = document.getElementById('themeSelect');
+    if(select) {
+        const theme = select.value;
+        localStorage.setItem('nexus_theme', theme);
+        aplicarTema(theme);
+    }
+}
+
+window.abrirConfiguracoes = abrirConfiguracoes;
+window.fecharConfiguracoes = fecharConfiguracoes;
+window.mudarTema = mudarTema;
+
+const themeOnLoad = localStorage.getItem('nexus_theme') || 'light';
+aplicarTema(themeOnLoad);
 // ==========================================
 // MÓDULO DE PERFIL / ARQUIVOS
 // ==========================================
@@ -1178,21 +1230,24 @@ function abrirPerfilCliente(id, tipoContexto = 'empresa') {
     const cliente = obterClienteContexto();
     if (!cliente) return;
 
-    const perfilModal = document.getElementById("perfilModal");
+    const perfilModal = document.getElementById('perfilModal');
     if (!perfilModal) return;
 
-    document.getElementById("perfilNome").innerText = cliente.nome;
-    document.getElementById("perfilCNPJ").innerText = (cliente.cnpj && cliente.cnpj !== "-") ? "CNPJ: " + cliente.cnpj : "Arquivos do Lojista / Cliente";
+    document.getElementById('perfilNome').innerText = cliente.nome;
+    document.getElementById('perfilCNPJ').innerText = (cliente.cnpj && cliente.cnpj !== '-') ? 'CNPJ: ' + cliente.cnpj : 'Arquivos do Lojista / Cliente';
 
     if (!cliente.arquivos) cliente.arquivos = [];
 
     renderizarArquivosCliente();
-    perfilModal.classList.add("active");
+    perfilModal.classList.add('active');
+
+    if (typeof window.renderizarPedidosCliente === 'function') setTimeout(() => window.renderizarPedidosCliente(), 100);
+    if (typeof window.renderizarSelectCategorias === 'function') setTimeout(() => window.renderizarSelectCategorias(), 100);
 }
 
 function fecharPerfil() {
-    const perfilModal = document.getElementById("perfilModal");
-    if (perfilModal) perfilModal.classList.remove("active");
+    const perfilModal = document.getElementById('perfilModal');
+    if (perfilModal) perfilModal.classList.remove('active');
     clientePerfilId = null;
     document.getElementById('fileUploadInput').value = '';
 }
@@ -1204,7 +1259,7 @@ function handleFileUpload(event) {
     if (!clientePerfilId) return;
 
     if (file.size > 1.5 * 1024 * 1024) {
-        mostrarToast("Selecione um arquivo de até 1.5MB.", "error");
+        mostrarToast('Selecione um arquivo de até 1.5MB.', 'error');
         document.getElementById('fileUploadInput').value = '';
         return;
     }
@@ -1238,56 +1293,54 @@ function handleFileUpload(event) {
                 salvarDados();
             }
             renderizarArquivosCliente();
-            mostrarToast("Upload concluido!", "success");
+            mostrarToast('Upload concluido!', 'success');
         } catch (error) {
-            mostrarToast("Memória cheia! Exclua outros arquivos.", "error");
+            mostrarToast('Memória cheia! Exclua outros arquivos.', 'error');
             cliente.arquivos.pop();
             if (clientePerfilTipo === 'lojista') salvarPinosLocais(); else salvarDados();
         }
     };
     reader.onerror = function () {
-        mostrarToast("Erro na leitura do arquivo.", "error");
+        mostrarToast('Erro na leitura do arquivo.', 'error');
     };
     reader.readAsDataURL(file);
 }
 
 function renderizarArquivosCliente() {
-    const container = document.getElementById("listaArquivosContainer");
+    const container = document.getElementById('listaArquivosContainer');
     if (!container) return;
-    container.innerHTML = "";
+    container.innerHTML = '';
 
     const cliente = obterClienteContexto();
     if (!cliente || !cliente.arquivos || cliente.arquivos.length === 0) {
-        container.innerHTML = "<p style='color:#999; font-size:13px; text-align:center; padding:10px;'>Nenhum arquivo adicionado.</p>";
+        container.innerHTML = '<p style="color:#999; font-size:13px; text-align:center; padding:10px;">Nenhum arquivo adicionado.</p>';
         return;
     }
 
     cliente.arquivos.forEach(arq => {
-        const div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.justifyContent = "space-between";
-        div.style.alignItems = "center";
-        div.style.padding = "10px";
-        div.style.border = "1px solid #ddd";
-        div.style.borderRadius = "8px";
-        div.style.marginBottom = "8px";
-        div.style.backgroundColor = "#fff";
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.padding = '10px';
+        div.style.border = '1px solid #ddd';
+        div.style.borderRadius = '8px';
+        div.style.marginBottom = '8px';
+        div.style.backgroundColor = '#fff';
 
         const typeColor = arq.icon === 'bx-file-pdf' ? '#e74c3c' : (arq.icon === 'bx-image' ? '#3498db' : '#95a5a6');
 
-        div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; width:75%;">
-                <i class='bx ${arq.icon}' style='font-size:24px; color:${typeColor}'></i>
-                <div style="max-width:90%">
-                    <h5 style="margin:0; font-size:13px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${arq.name}</h5>
-                    <p style="margin:0; font-size:11px; color:#888;">${arq.size} - ${arq.date}</p>
-                </div>
-            </div>
-            <div style="display:flex; gap: 8px;">
-                <button title="Baixar / Visualizar" class="action-btn" onclick="visualizarArquivo('${arq.id}')" style="color:var(--primary-color)"><i class='bx bx-cloud-download'></i></button>
-                <button title="Excluir Arquivo" class="action-btn delete" onclick="deletarArquivo('${arq.id}')"><i class='bx bx-trash'></i></button>
-            </div>
-        `;
+        div.innerHTML = "<div style='display:flex; align-items:center; gap:10px; width:75%;'>" +
+            "<i class='bx " + arq.icon + "' style='font-size:24px; color:" + typeColor + "'></i>" +
+            "<div style='max-width:90%'>" +
+            "<h5 style='margin:0; font-size:13px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;'>" + arq.name + "</h5>" +
+            "<p style='margin:0; font-size:11px; color:#888;'>" + arq.size + " - " + arq.date + "</p>" +
+            "</div>" +
+            "</div>" +
+            "<div style='display:flex; gap: 8px;'>" +
+            "<button title='Baixar / Visualizar' class='action-btn' onclick='visualizarArquivo(\"" + arq.id + "\")' style='color:var(--primary-color)'><i class='bx bx-cloud-download'></i></button>" +
+            "<button title='Excluir Arquivo' class='action-btn delete' onclick='deletarArquivo(\"" + arq.id + "\")'><i class='bx bx-trash'></i></button>" +
+            "</div>";
 
         container.appendChild(div);
     });
@@ -1307,12 +1360,12 @@ function visualizarArquivo(idArq) {
             link.download = arq.name;
             link.click();
             window.URL.revokeObjectURL(link.href);
-            mostrarToast("Iniciando download...", "info");
+            mostrarToast('Iniciando download...', 'info');
         });
 }
 
 function deletarArquivo(idArq) {
-    if (!confirm("Certeza que quer apagar definitivamente este arquivo?")) return;
+    if (!confirm('Certeza que quer apagar definitivamente este arquivo?')) return;
 
     const cliente = obterClienteContexto();
     if (!cliente || !cliente.arquivos) return;
@@ -1324,7 +1377,7 @@ function deletarArquivo(idArq) {
         salvarDados();
     }
     renderizarArquivosCliente();
-    mostrarToast("Arquivo excluido!", "success");
+    mostrarToast('Arquivo excluido!', 'success');
 }
 
 window.abrirPerfilCliente = abrirPerfilCliente;
@@ -1332,127 +1385,698 @@ window.fecharPerfil = fecharPerfil;
 window.handleFileUpload = handleFileUpload;
 window.visualizarArquivo = visualizarArquivo;
 window.deletarArquivo = deletarArquivo;
+
 // ==========================================
-// MÓDULO DE CONFIGURAÇÕES / TEMA
+// MÓDULO DE GERENCIAMENTO DE CATEGORIAS
 // ==========================================
-function abrirConfiguracoes() {
-    const docModal = document.getElementById('configModal');
-    if (docModal) docModal.classList.add('active');
-    const currentTheme = localStorage.getItem('nexus_theme') || 'light';
-    const select = document.getElementById('themeSelect');
-    if (select) select.value = currentTheme;
+window.categoriasSalvas = ['Pias de Granito', 'Louças e Metais', 'Porcelanato', 'Tintas'];
+
+window.renderizarSelectCategorias = function() {
+    const sel = document.getElementById('pedidoCategoria');
+    if (!sel) return;
+    
+    let cats = JSON.parse(localStorage.getItem('nexus_categorias_' + getUserPrefix()));
+    if(!cats) cats = window.categoriasSalvas;
+    
+    const valObj = sel.value;
+    
+    sel.innerHTML = '<option value="">Selecione a Categoria</option>';
+    cats.forEach(c => {
+        sel.innerHTML += '<option value="' + c + '">' + c + '</option>';
+    });
+    
+    if(valObj) {
+        sel.value = valObj;
+    }
 }
 
-function fecharConfiguracoes() {
-    const docModal = document.getElementById('configModal');
-    if (docModal) docModal.classList.remove('active');
+const originalAbrirPerfilClienteCat = window.abrirPerfilCliente;
+window.abrirPerfilCliente = function(id, tipoContexto = 'empresa') {
+    originalAbrirPerfilClienteCat(id, tipoContexto);
+    setTimeout(() => {
+        if(typeof renderizarSelectCategorias === 'function') {
+            renderizarSelectCategorias();
+        }
+    }, 100);
 }
 
-function aplicarTema(theme) {
-    if (theme === 'dark') {
-        document.body.classList.add('dark-theme');
+window.abrirModalNovaCategoria = function() {
+    const mdl = document.getElementById('categoriaModal');
+    if(mdl) mdl.classList.add('active');
+    const inp = document.getElementById('novaCategoriaNome');
+    if(inp) {
+        inp.value = '';
+        setTimeout(() => inp.focus(), 100);
+    }
+}
+
+window.fecharModalNovaCategoria = function() {
+    const mdl = document.getElementById('categoriaModal');
+    if(mdl) mdl.classList.remove('active');
+}
+
+window.salvarNovaCategoria = function() {
+    const input = document.getElementById('novaCategoriaNome');
+    if(!input) return;
+    const val = input.value.trim();
+    
+    if (!val) { 
+        mostrarToast('Informe o nome da categoria.', 'error'); 
+        return; 
+    }
+    
+    let cats = JSON.parse(localStorage.getItem('nexus_categorias_' + getUserPrefix()));
+    if(!cats) cats = window.categoriasSalvas;
+    
+    const exactMatchStr = cats.find(c => c.toLowerCase() === val.toLowerCase());
+    if (!exactMatchStr) {
+        cats.push(val);
+        cats.sort();
+        localStorage.setItem('nexus_categorias_' + getUserPrefix(), JSON.stringify(cats));
+        mostrarToast('Categoria salva!', 'success');
     } else {
-        document.body.classList.remove('dark-theme');
+        mostrarToast('Categoria já existe!', 'info');
+    }
+    
+    window.categoriasSalvas = cats;
+    renderizarSelectCategorias();
+    fecharModalNovaCategoria();
+    
+    const sel = document.getElementById('pedidoCategoria');
+    if (sel) {
+        sel.value = exactMatchStr || val;
     }
 }
 
-function mudarTema() {
-    const select = document.getElementById('themeSelect');
-    if (select) {
-        const theme = select.value;
-        localStorage.setItem('nexus_theme', theme);
-        aplicarTema(theme);
+window.renderizarListaLojistasLateral = function () {
+    const listContainer = document.getElementById('listaLojistasLateral');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    const inputPesquisa = document.getElementById('pesquisaLojista');
+    const termo = inputPesquisa ? inputPesquisa.value.toLowerCase() : '';
+
+    let filtrados = locaisLojistas || [];
+    if (termo) {
+        filtrados = filtrados.filter(l =>
+            (l.nome && l.nome.toLowerCase().includes(termo)) ||
+            (l.contato && l.contato.toLowerCase().includes(termo)) ||
+            (l.cnpj && l.cnpj.includes(termo))
+        );
+    }
+
+    if (filtrados.length === 0) {
+        listContainer.innerHTML = '<div style="text-align:center; padding: 20px; font-size: 12px; color: #888;">Nenhum cliente/lojista encontrado.</div>';
+        return;
+    }
+
+    // Ordenar alfabeticamente
+    filtrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+    filtrados.forEach(cliente => {
+        const div = document.createElement("div");
+        div.style.background = "#fff";
+        div.style.border = "1px solid rgba(0,0,0,0.08)";
+        div.style.borderRadius = "8px";
+        div.style.padding = "10px";
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+        div.style.gap = "5px";
+        div.style.cursor = "pointer";
+        div.style.transition = "all 0.2s";
+        div.onmouseover = () => { div.style.borderColor = "var(--primary-color)"; div.style.boxShadow = "0 2px 5px rgba(0,0,0,0.05)"; };
+        div.onmouseout = () => { div.style.borderColor = "rgba(0,0,0,0.08)"; div.style.boxShadow = "none"; };
+        div.onclick = () => {
+            map.setView([cliente.lat, cliente.lng], 15);
+        };
+
+        let statusColor = cliente.status === 'ativo' ? '#2ecc71' : cliente.status === 'prospect' ? '#f39c12' : '#e74c3c';
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <h5 style="margin:0; font-size:13px; color:#333; font-weight:600;">${cliente.nome}</h5>
+                <span title="${cliente.status.toUpperCase()}" style="width:10px; height:10px; border-radius:50%; background:${statusColor}; display:inline-block; flex-shrink:0;"></span>
+            </div>
+            ${cliente.contato ? `<div style="font-size:11px; color:#666;"><i class='bx bx-phone'></i> ${cliente.contato}</div>` : ''}
+            <div style="display:flex; gap: 5px; margin-top: 5px;">
+                <button onclick="event.stopPropagation(); abrirPerfilCliente('${cliente.id}', 'lojista');" style="flex:1; background:rgba(255,107,0,0.1); color:#ff6b00; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600;"><i class='bx bx-folder-open'></i> Arquivos</button>
+                <button onclick="event.stopPropagation(); prepararEdicaoPin('${cliente.id}');" style="background:#eee; color:#555; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:11px;"><i class='bx bx-edit'></i> Editar</button>
+            </div>
+        `;
+        listContainer.appendChild(div);
+    });
+}
+
+window.filtrarListaDeLojistas = function () {
+    renderizarListaLojistasLateral();
+}
+
+// Hook into existing function to update list when map is shown
+const originalMostrarMapa2 = window.mostrarMapa;
+window.mostrarMapa = function () {
+    if (typeof originalMostrarMapa2 === 'function') originalMostrarMapa2();
+    const linkClientes = document.getElementById("linkClientes");
+    if (linkClientes) {
+        document.querySelectorAll(".nav-links a").forEach(l => l.classList.remove("active"));
+        linkClientes.classList.add("active");
+    }
+    setTimeout(() => {
+        if (typeof renderizarListaLojistasLateral === 'function') {
+            renderizarListaLojistasLateral();
+        }
+    }, 200);
+}
+
+// Hook into salvarPinosLocais to update list
+const originalSalvarPinosLocais = window.salvarPinosLocais;
+window.salvarPinosLocais = function () {
+    if (typeof originalSalvarPinosLocais === 'function') originalSalvarPinosLocais();
+    if (typeof renderizarListaLojistasLateral === 'function') renderizarListaLojistasLateral();
+}
+
+window.mostrarClientes = function () {
+    const mainColumn = document.getElementById('mainColumn');
+    const iframeColumn = document.getElementById('iframeColumn');
+    const mapColumn = document.getElementById('mapColumn');
+    const clientesColumn = document.getElementById('clientesColumn');
+
+    if (mainColumn) mainColumn.style.display = 'none';
+    if (iframeColumn) iframeColumn.style.display = 'none';
+    if (mapColumn) mapColumn.style.display = 'none';
+    if (clientesColumn) clientesColumn.style.display = 'block';
+
+    document.getElementById("dashboardTitle").innerText = "Meus Clientes";
+
+    document.querySelectorAll(".nav-links a").forEach(l => l.classList.remove("active"));
+    const linkClientes = document.getElementById("linkClientes");
+    if (linkClientes) linkClientes.classList.add("active");
+
+    if (typeof renderizarListaLojistasLateral === 'function') {
+        renderizarListaLojistasLateral();
     }
 }
 
-window.abrirConfiguracoes = abrirConfiguracoes;
-window.fecharConfiguracoes = fecharConfiguracoes;
-window.mudarTema = mudarTema;
+window.filtrarListaDeLojistas = function () {
+    renderizarListaLojistasLateral();
+}
 
-const themeOnLoad = localStorage.getItem('nexus_theme') || 'dark';
-aplicarTema(themeOnLoad);
+window.renderizarListaLojistasLateral = function () {
+    const listContainer = document.getElementById('listaLojistasLateral');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    const inputPesquisa = document.getElementById('pesquisaLojista');
+    const termo = inputPesquisa ? inputPesquisa.value.toLowerCase().trim() : '';
+
+    const selectFiltro = document.getElementById('filtroTipoLojista');
+    const tipoFiltro = selectFiltro ? selectFiltro.value : 'nome';
+
+    let filtrados = locaisLojistas || [];
+
+    // Reverse Geocoding is not natively provided easily if there's no stored "cidade" property
+    // We will assume "cidade" might be loosely stored in `obs` or the user might implement a check
+    // Actually, CNPJ could be in `obs`. So CNPJ will look in obs or cnpj props.
+    if (termo) {
+        filtrados = filtrados.filter(l => {
+            const obsStr = l.obs ? l.obs.toLowerCase() : '';
+            const nomeStr = l.nome ? l.nome.toLowerCase() : '';
+            const cnpjStr = l.cnpj ? l.cnpj.toLowerCase() : '';
+            const contatoStr = l.contato ? l.contato.toLowerCase() : '';
+
+            if (tipoFiltro === 'nome') {
+                return nomeStr.includes(termo) || contatoStr.includes(termo);
+            } else if (tipoFiltro === 'cnpj') {
+                const termClean = termo.replace(/[^0-9]/g, '');
+                if (termClean.length > 0) {
+                    const obsClean = obsStr.replace(/[^0-9]/g, '');
+                    const cnpjClean = cnpjStr.replace(/[^0-9]/g, '');
+                    return obsClean.includes(termClean) || cnpjClean.includes(termClean);
+                }
+                return obsStr.includes(termo) || cnpjStr.includes(termo);
+            } else if (tipoFiltro === 'cidade') {
+                // Since cidade might be in observations, we just search the observations for it
+                return obsStr.includes(termo);
+            }
+            return false;
+        });
+    }
+
+    if (filtrados.length === 0) {
+        listContainer.innerHTML = '<div style="text-align:center; padding: 20px; font-size: 13px; color: #888; grid-column: 1 / -1;">Nenhum cliente/lojista encontrado com este filtro.</div>';
+        return;
+    }
+
+    // Ordenar alfabeticamente
+    filtrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+    filtrados.forEach(cliente => {
+        const div = document.createElement("div");
+        div.style.background = "#fff";
+        div.style.border = "1px solid rgba(0,0,0,0.08)";
+        div.style.borderRadius = "8px";
+        div.style.padding = "15px";
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+        div.style.gap = "8px";
+        div.style.boxShadow = "0 1px 3px rgba(0,0,0,0.02)";
+        div.style.transition = "all 0.2s";
+
+        let statusColor = cliente.status === 'ativo' ? '#2ecc71' : cliente.status === 'prospect' ? '#f39c12' : '#e74c3c';
+
+        let cnpjEncontrado = '';
+        if (cliente.obs && cliente.obs.includes('CNPJ:')) {
+            const r = cliente.obs.match(/CNPJ:\s*([^\n]+)/);
+            if (r) cnpjEncontrado = r[1];
+        } else if (cliente.cnpj) {
+            cnpjEncontrado = cliente.cnpj;
+        }
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h5 style="margin:0; font-size:14px; color:#333; font-weight:700;">${cliente.nome}</h5>
+                </div>
+                <span title="${(cliente.status || '').toUpperCase()}" style="width:12px; height:12px; border-radius:50%; background:${statusColor}; display:inline-block; flex-shrink:0;"></span>
+            </div>
+            ${cnpjEncontrado ? `<div style="font-size:12px; color:#666; display:flex; align-items:center; gap:5px;"><i class='bx bx-id-card' style="color:var(--primary-color);"></i> CNPJ: ${cnpjEncontrado}</div>` : ''}
+            ${cliente.contato ? `<div style="font-size:12px; color:#666; display:flex; align-items:center; gap:5px;"><i class='bx bx-phone' style="color:var(--primary-color);"></i> Contato: ${cliente.contato}</div>` : ''}
+            ${cliente.obs && !cliente.obs.startsWith('CNPJ:') && cliente.obs.length > 20 ? `<div style="font-size:11px; color:#999; margin-top:2px; font-style:italic;">Info: ${cliente.obs.substring(0, 45)}...</div>` : ''}
+            
+            <div style="display:flex; gap: 8px; margin-top: 10px;">
+                <button onclick="abrirPerfilCliente('${cliente.id}', 'lojista')" style="flex:1; background:rgba(255,107,0,0.1); color:#ff6b00; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;"><i class='bx bx-folder-open'></i> Ver Arquivos / Pedidos</button>
+            </div>
+        `;
+        listContainer.appendChild(div);
+    });
+}
+window.baixarAnexoPedido = function (idPedido) {
+    const cliente = obterClienteContexto();
+    if (!cliente || !cliente.pedidos) return;
+
+    const ped = cliente.pedidos.find(p => p.id === idPedido);
+    if (!ped || !ped.fileData) {
+        mostrarToast("Anexo não encontrado.", "error");
+        return;
+    }
+
+    fetch(ped.fileData)
+        .then(res => res.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = ped.fileName || 'pedido_anexo';
+            link.click();
+            window.URL.revokeObjectURL(link.href);
+            mostrarToast("Download iniciado!", "success");
+        })
+        .catch(err => {
+            mostrarToast("Erro ao baixar anexo.", "error");
+            console.error(err);
+        });
+}
+// ==========================================
+// MÓDULO DE PEDIDOS 
+// ==========================================
+window.adicionarPedido = function() {
+    const cliente = obterClienteContexto();
+    if (!cliente) return;
+    
+    if (!cliente.pedidos) cliente.pedidos = [];
+    
+    const fileInput = document.getElementById('pedidoFileInput');
+    const catSel = document.getElementById('pedidoCategoria');
+    if(!catSel.value) { mostrarToast('Selecione uma categoria.', 'error'); return; }
+    
+    const file = fileInput.files[0];
+    const dt = new Date().toISOString(); 
+    
+    const concluirAdicaoPedido = () => {
+        if(clientePerfilTipo === 'lojista') salvarPinosLocais(); else salvarDados();
+        if(typeof window.renderizarPedidosCliente === 'function') window.renderizarPedidosCliente();
+        fileInput.value = '';
+        document.getElementById('pedidoFileName').innerText = 'Escolher PDF';
+        catSel.value = '';
+        mostrarToast('Pedido adicionado!', 'success');
+        if (typeof window.verificarLembretes === 'function') setTimeout(window.verificarLembretes, 100);
+    };
+
+    if (file) {
+        if (file.size > 1.5 * 1024 * 1024) { mostrarToast('Arquivo muito grande.', 'error'); return; }
+        const r = new FileReader();
+        r.onload = function(e){
+            cliente.pedidos.push({
+                id: Date.now().toString(),
+                categoria: catSel.value,
+                data: dt,
+                fileName: file.name,
+                fileData: e.target.result
+            });
+            concluirAdicaoPedido();
+        };
+        r.readAsDataURL(file);
+    } else {
+        cliente.pedidos.push({
+            id: Date.now().toString(),
+            categoria: catSel.value,
+            data: dt,
+            fileName: '',
+            fileData: ''
+        });
+        concluirAdicaoPedido();
+    }
+}
+
+window.renderizarPedidosCliente = function() {
+    const list = document.getElementById('listaPedidosContainer');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    const cliente = obterClienteContexto();
+    if(!cliente || !cliente.pedidos || cliente.pedidos.length === 0) {
+        list.innerHTML = '<p style="text-align:center;color:#999;font-size:12px;">Nenhum pedido no histórico.</p>';
+        return;
+    }
+    
+    const pedidosSorted = [...cliente.pedidos].sort((a,b) => new Date(b.data) - new Date(a.data));
+    pedidosSorted.forEach(p => {
+        const d = new Date(p.data);
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #eee; border-radius:8px; margin-bottom:8px; background:#fff;';
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = '<strong style="font-size:13px;color:#333;">' + p.categoria + '</strong><div style="font-size:11px;color:#888;">' + d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR').substring(0,5) + '</div>';
+        
+        const btnDiv = document.createElement('div');
+        btnDiv.style.cssText = 'display:flex; gap:8px;';
+        
+        if (p.fileData) {
+            const btnD = document.createElement('button');
+            btnD.style.cssText = 'background:none;border:none;color:var(--primary-color);cursor:pointer;';
+            btnD.innerHTML = "<i class='bx bx-download'></i> Baixar";
+            btnD.onclick = () => window.baixarAnexoPedido(p.id);
+            btnDiv.appendChild(btnD);
+        }
+        
+        const btnDel = document.createElement('button');
+        btnDel.style.cssText = 'background:none;border:none;color:red;cursor:pointer;';
+        btnDel.innerHTML = "<i class='bx bx-trash'></i>";
+        btnDel.onclick = () => window.deletarPedido(p.id);
+        
+        btnDiv.appendChild(btnDel);
+        div.appendChild(infoDiv);
+        div.appendChild(btnDiv);
+        
+        list.appendChild(div);
+    });
+}
+
+window.deletarPedido = function(id) {
+    if(!confirm('Deseja excluir o pedido?')) return;
+    const cliente = obterClienteContexto();
+    cliente.pedidos = cliente.pedidos.filter(p => p.id !== id);
+    if(clientePerfilTipo === 'lojista') salvarPinosLocais(); else salvarDados();
+    renderizarPedidosCliente();
+    if (typeof window.verificarLembretes === 'function') window.verificarLembretes();
+}
+
+window.atualizarNomeArquivo = function(input) {
+    if(input.files && input.files.length > 0) {
+        document.getElementById('pedidoFileName').innerText = input.files[0].name.substring(0, 15) + '...';
+    } else {
+        document.getElementById('pedidoFileName').innerText = 'Escolher PDF';
+    }
+}
 
 // ==========================================
-// ALTERAR LOGIN (EMAIL/SENHA) NAS CONFIGURAÇÕES
+// MÓDULO DE FOCAR MAPA BUSCA
 // ==========================================
-function salvarNovoLogin() {
-    const novoEmail = document.getElementById('configNovoEmail') ? document.getElementById('configNovoEmail').value.trim() : '';
-    const novaSenha = document.getElementById('configNovaSenha') ? document.getElementById('configNovaSenha').value : '';
-    const confirmarSenha = document.getElementById('configConfirmarSenha') ? document.getElementById('configConfirmarSenha').value : '';
-
-    if (!novoEmail && !novaSenha) {
-        mostrarToast('Preencha ao menos um campo para alterar.', 'error');
+const originalFiltrarPinosMapa = window.filtrarPinosMapa;
+window.filtrarPinosMapa = function() {
+    const input = document.getElementById('pesquisaMapaInput');
+    if (!input || !map) return;
+    const termo = input.value.toLowerCase().trim();
+    if(!termo) {
+        map.setView([-14.235, -51.925], 4);
+        renderizarPinosNoMapa();
         return;
     }
-
-    if (novaSenha && novaSenha !== confirmarSenha) {
-        mostrarToast('As senhas não coincidem!', 'error');
-        return;
+    
+    // Check if original is available (it might not be in cleaned version!)
+    // Let's implement full clear and re-render of matched 
+    if (pinsLayer) pinsLayer.clearLayers();
+    
+    const filtrados = locaisLojistas.filter(l => 
+        (l.nome && l.nome.toLowerCase().includes(termo)) || 
+        (l.obs && l.obs.toLowerCase().includes(termo)) ||
+        (l.cnpj && l.cnpj.includes(termo))
+    );
+    
+    filtrados.forEach(local => {
+        const marker = L.marker([local.lat, local.lng], { icon: obterIconePin(local.status) });
+        marker.bindPopup("<div style='min-width: 150px; padding: 5px; font-family: Inter, sans-serif;'><h4 style='margin:0 0 5px 0; color:#333; font-size:14px;'>" + local.nome + "</h4><p style='margin:0; font-size:12px; color:#666;'><strong>Situação:</strong> " + local.status.toUpperCase() + "</p><div style='margin-top: 10px; text-align: right;'><button class='btn-secondary' style='font-size:11px; padding:3px 8px; border-radius:4px; cursor:pointer;' onclick='prepararEdicaoPin(\"" + local.id + "\"); return false;'>Editar / Excluir</button></div></div>");
+        pinsLayer.addLayer(marker);
+    });
+    
+    if(filtrados.length === 1) {
+        map.setView([filtrados[0].lat, filtrados[0].lng], 15);
+    } else if(filtrados.length > 1) {
+        const bounds = L.latLngBounds(filtrados.map(l => [l.lat, l.lng]));
+        map.fitBounds(bounds, {padding: [50, 50]});
+    } else {
+        // Fallback to nominatim
+        // Try searching city or region
+        fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(termo + ", Brasil"))
+            .then(res => res.json())
+            .then(data => {
+                if(data && data.length > 0) {
+                    map.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 12);
+                    mostrarToast("Mostrando cidade/regiao (" + termo + "). Nenhum lojista encontrado aqui ainda.", "info");
+                } else {
+                    mostrarToast("Nenhum local ou lojista encontrado para: " + termo, "error");
+                }
+            }).catch(console.error);
     }
+}
 
-    if (novaSenha && novaSenha.length < 4) {
-        mostrarToast('A senha precisa ter pelo menos 4 caracteres.', 'error');
-        return;
+// ==========================================
+// ALERTAS 25, 35, 45 DIAS 
+// ==========================================
+window.verificarLembretes = function() {
+    const badge25 = document.getElementById('badgeAlertas');
+    const badge35 = document.getElementById('badgeAlertas35');
+    const badge45 = document.getElementById('badgeAlertas45');
+    
+    if(!badge25 || !badge35 || !badge45) return;
+    
+    let a25 = [], a35 = [], a45 = [];
+    
+    const hoje = new Date();
+    
+    const analisar = (cliente, tipo) => {
+        if(!cliente.pedidos || cliente.pedidos.length === 0) return;
+        let cats = {};
+        cliente.pedidos.forEach(p => {
+            const dt = new Date(p.data);
+            if(!cats[p.categoria] || dt > cats[p.categoria]) {
+                cats[p.categoria] = dt;
+            }
+        });
+        
+        for(const cat in cats) {
+            const diasStr = (hoje - cats[cat]) / (1000 * 3600 * 24);
+            const diasFormated = Math.floor(diasStr);
+            if(diasFormated >= 45) {
+                a45.push({ nome: cliente.nome, id: cliente.id, dias: diasFormated, cat: cat, tipo: tipo });
+            } else if(diasFormated >= 35) {
+                a35.push({ nome: cliente.nome, id: cliente.id, dias: diasFormated, cat: cat, tipo: tipo });
+            } else if(diasFormated >= 25) {
+                a25.push({ nome: cliente.nome, id: cliente.id, dias: diasFormated, cat: cat, tipo: tipo });
+            }
+        }
     }
-
-    const emailAtual = localStorage.getItem('nexus_user');
-    const usuariosStr = localStorage.getItem('nexus_usuarios');
-    let usuarios = usuariosStr ? JSON.parse(usuariosStr) : [];
-    const idx = usuarios.findIndex(u => u.email === emailAtual);
-
-    if (idx === -1) {
-        mostrarToast('Usuário não encontrado no sistema.', 'error');
-        return;
-    }
-
-    if (novoEmail && novoEmail !== emailAtual) {
-        const emailJaExiste = usuarios.find(u => u.email === novoEmail && novoEmail !== emailAtual);
-        if (emailJaExiste) {
-            mostrarToast('Este e-mail já está cadastrado.', 'error');
+    
+    empresas.forEach(emp => analisar(emp, 'empresa'));
+    locaisLojistas.forEach(loj => analisar(loj, 'lojista'));
+    
+    const render = (arr, elId, badge, color) => {
+        const div = document.getElementById(elId);
+        badge.innerText = arr.length;
+        if(arr.length === 0) {
+            div.innerHTML = '<div style="text-align:center; padding: 5px; font-style: italic;">Nenhum alerta.</div>';
             return;
         }
-        // Migrar dados do usuário para o novo email
-        const dadosAntigos = localStorage.getItem('nexus_empresas_' + emailAtual);
-        const pinsAntigos = localStorage.getItem('nexus_map_pins_' + emailAtual);
-        if (dadosAntigos) {
-            localStorage.setItem('nexus_empresas_' + novoEmail, dadosAntigos);
-            localStorage.removeItem('nexus_empresas_' + emailAtual);
-        }
-        if (pinsAntigos) {
-            localStorage.setItem('nexus_map_pins_' + novoEmail, pinsAntigos);
-            localStorage.removeItem('nexus_map_pins_' + emailAtual);
-        }
-        usuarios[idx].email = novoEmail;
-        localStorage.setItem('nexus_user', novoEmail);
-        const adminName = document.querySelector('.admin_name');
-        if (adminName) {
-            const username = novoEmail.split('@')[0];
-            adminName.innerText = username.charAt(0).toUpperCase() + username.slice(1);
-        }
+        div.innerHTML = '';
+        arr.sort((a,b)=>b.dias - a.dias).forEach(item => {
+            const d = document.createElement('div');
+            d.style.cssText = 'background:rgba(255,255,255,0.7); color:#333; padding:8px; border-radius:6px; cursor:pointer; font-weight:600; border-left:3px solid ' + color + '; margin-bottom: 5px; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:background 0.2s;';
+            d.innerHTML = '🔥 ' + item.cat + ' (' + item.dias + ' dias) <br><span style="font-weight:400; font-size:10px; color:#666;">' + item.nome + '</span>';
+            d.onclick = () => window.abrirPerfilCliente(item.id, item.tipo);
+            div.appendChild(d);
+        });
     }
-
-    if (novaSenha) {
-        usuarios[idx].senha = novaSenha;
-    }
-
-    localStorage.setItem('nexus_usuarios', JSON.stringify(usuarios));
-    mostrarToast('Dados de acesso atualizados com sucesso!', 'success');
-
-    if (document.getElementById('configNovoEmail')) document.getElementById('configNovoEmail').value = '';
-    if (document.getElementById('configNovaSenha')) document.getElementById('configNovaSenha').value = '';
-    if (document.getElementById('configConfirmarSenha')) document.getElementById('configConfirmarSenha').value = '';
+    
+    render(a25, 'listaAlertas', badge25, '#2ecc71');
+    render(a35, 'listaAlertas35', badge35, '#f39c12');
+    render(a45, 'listaAlertas45', badge45, '#e74c3c');
 }
 
-window.salvarNovoLogin = salvarNovoLogin;
+const originalAtualizarDashboard = window.atualizarDashboard;
+window.atualizarDashboard = function() {
+    if(typeof originalAtualizarDashboard === 'function') originalAtualizarDashboard();
+    if(typeof window.verificarLembretes === 'function') setTimeout(window.verificarLembretes, 100);
+}
 
-// ==========================================
-// EXPOR FUNÇÕES GLOBALMENTE (type="module" fix)
-// ==========================================
-window.mostrarPainel = mostrarPainel;
-window.abrirModal = abrirModal;
-window.fecharModal = fecharModal;
-window.toggleSubMenuEmpresas = toggleSubMenuEmpresas;
-window.toggleNotesPanel = toggleNotesPanel;
-window.filtrarEmpresas = filtrarEmpresas;
-window.mostrarToast = mostrarToast;
-window.fazerLogout = fazerLogout;
+const orgAbrirPerfilCliente = window.abrirPerfilCliente;
+window.abrirPerfilCliente = function(id, tipoContexto = 'empresa') {
+    if (typeof orgAbrirPerfilCliente === 'function') orgAbrirPerfilCliente(id, tipoContexto);
+    if (typeof window.renderizarPedidosCliente === 'function') setTimeout(() => window.renderizarPedidosCliente(), 100);
+}
+
+// Initialize on load just to be sure
+setTimeout(() => { if(typeof window.verificarLembretes === 'function') window.verificarLembretes(); }, 500);
+
+// HACKS PARA MOBILE / RESPONSIVO
+document.addEventListener('click', function(e) {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarBtn = document.querySelector('.sidebarBtn');
+    
+    // Se o clique foi fora da sidebar e a sidebar está ativa (e estamos no mobile)...
+    if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+        // Verifica se clicou no botão de abrir ou dentro da sidebar
+        if (!sidebar.contains(e.target) && !sidebarBtn.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    }
+});
+
+
+// FUNCAO EM FALTA ADICIONADA: Cadastrar via CNPJ no MAPA
+window.abrirModalNovoClienteMapa = function() {
+    // Se o usuario quiser cadastrar um cliente sem clicar no mapa,
+    // pedimos para ele colocar pelo menos o CNPJ, e depois resolvemos a coordenada.
+    document.getElementById("pinId").value = "";
+    document.getElementById("pinLat").value = "";
+    document.getElementById("pinLng").value = "";
+    document.getElementById("pinCnpj").value = "";
+    document.getElementById("pinNome").value = "";
+    document.getElementById("pinContato").value = "";
+    document.getElementById("pinStatus").value = "ativo";
+    document.getElementById("pinObs").value = "";
+    
+    document.getElementById("btnDeletePinContainer").style.display = "none";
+    document.getElementById("pinModalTitle").innerText = "Cadastrar Cliente Via CNPJ";
+    document.getElementById("pinModal").classList.add("active");
+};
+
+// FUNCAO DE BUSCAR DADOS PELO CNPJ NA API PBLICA
+document.getElementById('pinCnpj').addEventListener('blur', async function() {
+    let cnpj = this.value.replace(/[^0-9]/g, '');
+    if(cnpj.length === 14) {
+        try {
+            const response = await fetch(`https://api.cnpjs.dev/v1/${cnpj}`);
+            if(response.ok) {
+                const data = await response.json();
+                if(data.razao_social) {
+                   document.getElementById('pinNome').value = data.nome_fantasia || data.razao_social;
+                }
+                if(data.telefone1) {
+                    document.getElementById('pinContato').value = data.telefone1;
+                }
+                
+                // Pega endereço para geolocalização ou salvar na obs
+                let enderecoCompleto = '';
+                if(data.endereco) {
+                    enderecoCompleto = `${data.endereco.logradouro}, ${data.endereco.municipio} - ${data.endereco.uf}`;
+                    document.getElementById('pinObs').value = `CNPJ: ${cnpj}\nEndereço: ${enderecoCompleto}`;
+                }
+
+                mostrarToast("CNPJ Localizado!", "success");
+            } else {
+                 mostrarToast("CNPJ no localizado na base.", "error");
+            }
+        } catch(error) {
+            console.error("Erro na busca de CNPJ:", error);
+        }
+    }
+});
+
+// FUNCAO ATUALIZADA: Suporte a Cadastro por CNPJ (sem LAT/LNG inicial)
+window.salvarLojistaLocal = async function(e) {
+    e.preventDefault();
+    const nome = document.getElementById("pinNome").value.trim();
+    if (!nome) return;
+
+    let latStr = document.getElementById("pinLat").value;
+    let lngStr = document.getElementById("pinLng").value;
+
+    // Se estiver cadastrando via CNPJ sem clicar no mapa, precisamos das coordenadas
+    if (!latStr || !lngStr || latStr === "undefined" || lngStr === "undefined") {
+        const cnpjStr = document.getElementById("pinCnpj").value.trim();
+        const obsStr = document.getElementById("pinObs").value;
+        const cidadeQuery = document.getElementById("pesquisaMapaInput") ? document.getElementById("pesquisaMapaInput").value : "";
+        
+        let queryParaGeocoding = nome; // fallback
+
+        // Tenta achar cidade/uf no endereco que foi pego via API
+        let enderecoViaApi = "";
+        if (obsStr && obsStr.includes("Endereço:")) {
+             enderecoViaApi = obsStr.split("Endereço:")[1].trim();
+             queryParaGeocoding = enderecoViaApi;
+        } else if (cidadeQuery) {
+             queryParaGeocoding = cidadeQuery;
+        }
+
+        mostrarToast("Buscando localização no mapa...", "info");
+        
+        try {
+            const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryParaGeocoding + ', Brazil')}&limit=1`;
+            const geoRes = await fetch(geocodeUrl);
+            const geoData = await geoRes.json();
+            
+            if (geoData && geoData.length > 0) {
+                latStr = geoData[0].lat;
+                lngStr = geoData[0].lon;
+            } else {
+                // Se nao achar o endereco com precisao, joga no centro de br
+                latStr = -14.235;
+                lngStr = -51.925;
+                mostrarToast("Endereço não encontrado exatamente, posicionado no centro do mapa. Arraste depois.", "warning");
+            }
+        } catch (err) {
+            console.error(err);
+            latStr = -14.235;
+            lngStr = -51.925;
+        }
+    }
+
+    const cnpjFormatado = document.getElementById("pinCnpj") ? document.getElementById("pinCnpj").value.trim() : "";
+
+    const novoPin = {
+        id: (typeof editandoPinId !== 'undefined' && editandoPinId) ? editandoPinId : Date.now().toString(),
+        nome: nome,
+        contato: document.getElementById("pinContato").value.trim(),
+        cnpj: cnpjFormatado, // Adicionando propriedade cnpj
+        status: document.getElementById("pinStatus").value,
+        obs: document.getElementById("pinObs").value.trim(),
+        lat: parseFloat(latStr),
+        lng: parseFloat(lngStr),
+        data: new Date().toISOString()
+    };
+
+    if (typeof editandoPinId !== 'undefined' && editandoPinId) {
+        const index = locaisLojistas.findIndex(l => l.id === editandoPinId);
+        if (index > -1) {
+            locaisLojistas[index] = novoPin;
+        }
+        mostrarToast("Local atualizado com sucesso!", "success");
+    } else {
+        locaisLojistas.push(novoPin);
+        mostrarToast("Lojista adicionado no mapa!", "success");
+    }
+
+    if(typeof salvarPinosLocais === 'function') salvarPinosLocais();
+    if(typeof fecharModalPin === 'function') fecharModalPin();
+    if(typeof map !== 'undefined' && map.closePopup) map.closePopup();
+};
+
+

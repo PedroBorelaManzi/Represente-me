@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
     --primary-color: #FF6B00;
@@ -62,18 +62,18 @@ body::before {
 }
 
 .brand {
-    font-family: 'Outfit', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.05em;
     display: flex;
     align-items: center;
-    gap: 12px;
 }
 
 .brand img {
-    height: 32px;
+    height: 160px;
     filter: drop-shadow(0 0 10px rgba(255, 107, 0, 0.4));
+    transition: transform 0.3s;
+}
+
+.brand img:hover {
+    transform: scale(1.05);
 }
 
 .nav-links {
